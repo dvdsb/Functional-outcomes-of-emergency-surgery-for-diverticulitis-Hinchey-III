@@ -8,9 +8,9 @@ at ClinicalTrials.gov on 6 November 2017 (NCT03332550). Individual patient level
       
 # R code                     
 The following R code for data management and statistical analysis are available:           
-**1. PSsweights**           
+**1. PSweights_estimation_evaluation**           
 Calculate and evaluate weights for IPW based on propensity score.            
-**2. Data_fix_and_analysis_**           
+**2. Data_fix_analysis**           
 Data management, descriptive statistics, estimation of treatment effect by regression models and plotting      
 
 
