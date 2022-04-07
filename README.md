@@ -4,8 +4,9 @@
 
 #  Description                                        
 The study was approved by the regional ethical review board in Gothenburg (545–17), and registered
-at ClinicalTrials.gov on 6 November 2017 (NCT03332550). Individual patient level data can not be publicly available or shared due to restrictions in the ethics approval agreement.
-      
+at ClinicalTrials.gov on 6 November 2017 (NCT03332550). 
+Data on the individual patient level can not be made publicly available or shared due to restrictions in the ethics approval.
+
 # R code                     
 The following R code for data management and statistical analysis are available:           
 **1. PSweights_estimation_evaluation**           
