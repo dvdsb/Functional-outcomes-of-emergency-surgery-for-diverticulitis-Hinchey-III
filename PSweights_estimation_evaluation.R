@@ -2,7 +2,6 @@ gc()
 options("install.lock"=FALSE)
 options(scipen = 6, digits = 4)
 
-
 library(tidyverse)
 library(twang)
 library(xtable)
@@ -36,7 +35,7 @@ A4 <- A4 %>% mutate(kol = as.numeric(kol)-1    ,
                     sepsis_op  = as.numeric( sepsis_op ) -1,
                     treatment = as.numeric(Surgery) -1  )
 #___________________________________________________________________________________________________
-
+# Estimate the propensity score
 set.seed(7678463)
 
 ps <-ps(   treatment ~
@@ -52,6 +51,9 @@ ps <-ps(   treatment ~
            verbose=FALSE,
            stop.method=c("es.mean" ),
            n.trees=50000  )
+#--------------------------------------------------------------------------------
+# Evaluate the extent to which the score and it´s weighting achives balance 
+# in the synthetic groups
 
 names(ps)
 ps$balance
@@ -73,7 +75,7 @@ bal2 <- xtable(pretty.tab,
                align=c("l","r","r","r","r" , "r","r","r","r", "r", "r"))
 
 bal2
-#________________________________________________
+#____________________________________________________________________________________
 vrs <- c(1, 2, 3, 4, 5)
 UNW <- as_tibble(bal.table(ps)$unw) %>%  dplyr::select(std.eff.sz ) %>%
   mutate(X = 1)
@@ -86,8 +88,7 @@ UNWW2 <- tibble(cbind(vrs, UNWW)) %>% mutate(abs = abs(std.eff.sz )) %>%
                                         "Immunosuppression", "Sepsis at surgery")))
 ddd <-  UNWW2 %>%   group_by(X) %>%
   summarise( mean = mean(abs)) ; ddd
-
-
+# Plot
 PLT <-    ggplot(UNWW2, aes(X, abs , group = vars, lty = vars )) +
   geom_line(  size = 1) +
   theme_bw() +
@@ -106,7 +107,7 @@ PLT <-    ggplot(UNWW2, aes(X, abs , group = vars, lty = vars )) +
 windows()
 PLT
 #________________________________________________________________________________________________________________________
-
+# Plots
 PS_fig_1 <- as.grob(plot(ps, plots=2))
 PS_fig_2 <- as.grob(plot(ps, plots=3))
 PS_fig_3 <- as.grob(plot(ps, plots=4))
@@ -115,7 +116,6 @@ PS_fig_4 <- as.grob(plot(ps, plots=5))
 windows()
 PS_fig_1234 <- see::plots(PS_fig_3, PS_fig_4  )
 PS_fig_1234
-
 
 #Whereas propensity score stratification requires considerable overlap in these spreads, excellent covariate balance can
 #often be achieved with weights, even when the propensity scores estimated for the treatment and

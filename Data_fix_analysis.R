@@ -37,6 +37,7 @@ n1. <- 95   # 11     95
 # Resection
 n2. <- 119   # 80 119
 
+# Proportional odds model
 Sample.size <- popower(p=p., odds.ratio=odds.ratio., n1=n1., n2=n2.) 
 
 #-----------------------------------------------------------------------------------
@@ -376,21 +377,7 @@ AND <- AND_0 %>%
 AND2 <- full_join(PC, AND) %>%
   full_join(P) %>%
   filter(Q79!="Stoma: Yes" & ANA_SET==1)
-
-#-----------------------------------------------------------
-chk <- AND2 %>%  
-  mutate(
-    fQ83=factor(Q83, levels=c(1, 2, 3), 
-                labels=c("            No, never", 
-                         "     Less than weekly", 
-                         "At least once per week"), ordered=T), 
-    fQ84=factor(Q84, levels=c(1, 2, 3, 4), 
-                labels=c("            No, never", 
-                         "Less than once per week", 
-                         "At least once per week", 
-                         "                 Daily"), ordered=T) )
-
-#-----------------------------------------------------------
+#---------------------------------------------------------------------------
 LARS_CAT <- AND2 %>%  
   mutate(fQ80=factor(Q80, levels=c(1, 2, 3), 
                      labels=c("              No, never", 
@@ -501,7 +488,7 @@ EL_CAT2 <- full_join(n, f) %>%
                                   "Smoking", 
                                   "LARS categories"))) 
 
-#_________________________________________________________________________
+#______________________________________________________________________________
 # Proportional odds regression using the propensity score weights
 
 EL_CAT.CONT <- full_join(EL_CAT2, EL_CONT)  %>%                       
@@ -533,7 +520,7 @@ EL_CAT.CONT <- full_join(EL_CAT2, EL_CONT)  %>%
                                               "Satisfied with the treatment", "Smoking")~output)) 
 
 # Odds ratio: Lavage vs Resection
-#_____________________________________________________________
+#_____________________________________________________________________________
 
 DESC_ <- EL_CAT2 %>%
   drop_na(Response.f) %>%
@@ -548,6 +535,7 @@ DESC_ <- EL_CAT2 %>%
   full_join(EL_CAT.CONT)
 
 #___________________________________________________________________________________
+# Bar plots
 MDL = function(z) { A <- DESC_ %>% 
   filter(variable == z) %>%
   ungroup %>%
@@ -631,7 +619,7 @@ QoL_6 <- MDLcont(z = "Mental well-being")
 QoL_7 <- MDLcont(z = "Bodily health")  
 
 #-----------------------------------------------------------------------------------------
-# Comcine plots
+# Combine plots
 FIG_EQ5d <-  ggarrange( EQcont_1, EQ_1, EQ_2, EQ_3, EQ_4, EQ_5, EQcont_2 , 
                         ncol=4, nrow=2, common.legend = TRUE, legend="top", heights=c(1, 1))
 
@@ -697,7 +685,8 @@ Adj1 <- paste( signif(exp(M1$beta[[1]]), digits = 3),
                ";",signif(exp(confint(M1)[[1,2]]), digits = 3),
                "),p=", signif(   anova(M1, type="III")[[1,3]] , digits = 2) )
 
-# The tendency for bother due to bowel dysfunction is higher among patients operated by Laparoscopic lavage compared with resection: Odds ratio (95%CI), p-value: `r Unadj1 ` (unadjusted analysis), `r Adj1 ` (adjusted analysis).
+# The tendency for bother due to bowel dysfunction is higher among patients 
+# operated by Laparoscopic lavage compared with resection.
 
 # Stoma function                    
 
@@ -743,7 +732,6 @@ ST2 <- ST2 %>%
                 Q93, Q94X1, Q95, Q96, Q97, Q98, Q99, 
                 Q100, Q101, Q102, Q103, Q104, Q105, Q106, Q107, 
                 Q108A, Q108B, Q108C, Q108D, Q108E)
-
 
 ST3 <- ST2 %>%
   pivot_longer(cols=-c(studienummer, Surgery) ,
@@ -950,53 +938,53 @@ HIJK <- H %>%
                values_to = "Response.f") %>% 
   drop_na(Response.f) %>% 
   mutate(variable=factor(Var.f,  
-                         levels = c( "Q46", "Q47", "Q48", 
-                                     "Q49", "Q50", "Q51" ,
-                                     "Q52", "Q53", "Q54" ,
-                                     "Q55", "Q56", "Q57" ,
-                                     "Q58", "Q59", "Q60",
-                                     "Q61", "Q62", 
-                                     "Q64" ,"Q65", "Q66", 
-                                     "Q67" , "Q68", "Q69", 
-                                     "Q70" , "Q71", 
-                                     "Q72", "Q73" , "Q74", 
-                                     "Q75", "Q76","Q77", 
-                                     "Q78"), 
-                         labels=c("Feeling that the bladder has\nnot been emptied, last month", 
-                                  "Need to hurry to the toilet to\nurinate, last month", 
-                                  "Urinary leakage due to not\nreaching a toilet in time", 
-                                  "Urinary leakage due to physical\nstress, last month",
-                                  "Urinary leakage, last month", 
-                                  "Have urinary dysfunction caused\nyou to refrain from activities,\nlast month", 
-                                  "Did you have problems with urinary\nleakage before your surgery for\nperforated diverticulitis", 
-                                  "How often do you change pad,\ndiaper or sanitary aid\nduring a typical day", 
-                                  "How would you feel if urinary dysfunction\nas it were during the last month were to\nremain for the rest of your life?", 
-                                  
-                                  "Is intercourse part of your sex-life", 
-                                  "Has sex been important to you,\nlast 6 months",
-                                  "How often have you had intercourse\nor any other sexual activity, last 6 months",
-                                  "Have you had thoughts or longing\nfor sex, last 6 months", 
-                                  "Have you refrained from sexual activities\nout of fear of failure, last 6 months", 
-                                  "Have your ability to have an orgasm\nchanged after your surgery due to perforated\ndiverticulitis", 
-                                  "Are you satisfied with your current sex-life,\nlast 6 months", 
-                                  "How would you feel if sexual impairments\nwere to remain the same for the rest\nof your life?", 
-                                  
-                                  "Have your ability to get an erection\ndeteriorated or ceased entirely after\nthe surgery for perforated diverticulitis", 
-                                  "If your ability to get an erection has\ndeteriorated or ceased entirely,did\nthis affect your self-esteem", 
-                                  "If your ability to get an erection has\ndeteriorated or ceased entirely, how would\nyou feel if the impairment were to remain the same\nfor the rest of your life?",
-                                  "Have you used technical aids or medication\nto improve or prolong your erection,\nlast 6 months", 
-                                  "If you used technical aids or medication to\nimprove or prolong your erection\nlast 6 months, did it help",
-                                  "Have you had premature ejaculation at\nsexual activity, last 6 months", 
-                                  "Have you been unable to ejaculate at\nsexual activity, last 6 months", 
-                                  "How would you feel if sexual impairments\nwere to remain the same for the\nrest of your life?", 
-                                  
-                                  "Have you reached menopause?", 
-                                  "At sexual arousal, have labia, clitoris\nor the vulva felt swollen and full of blood,\nlast 6 months", 
-                                  "Have your vagina felt lubricated at\nsexual arousal, last 6 months", 
-                                  "Have you had superficial pain around vulva\nduring intercourse or comparable activity,\nlast 6 months",
-                                  "Have you had deep pain in your pelvic\nregion during intercourse or\ncomparable activity,last 6 months", 
-                                  "If you experienced pain during intercourse\nor comparable activity last 6 months, how\nwould you feel if the impairment were to remain the\nsame for the rest of your life?", 
-                                  "How would you feel if sexual impairments were\nto remain the same for the rest of your life?"))) 
+levels = c( "Q46", "Q47", "Q48", 
+"Q49", "Q50", "Q51" ,
+"Q52", "Q53", "Q54" ,
+"Q55", "Q56", "Q57" ,
+"Q58", "Q59", "Q60",
+"Q61", "Q62", 
+"Q64" ,"Q65", "Q66", 
+"Q67" , "Q68", "Q69", 
+"Q70" , "Q71", 
+"Q72", "Q73" , "Q74", 
+"Q75", "Q76","Q77", 
+"Q78"), 
+labels=c("Feeling that the bladder has\nnot been emptied, last month", 
+"Need to hurry to the toilet to\nurinate, last month", 
+"Urinary leakage due to not\nreaching a toilet in time", 
+"Urinary leakage due to physical\nstress, last month",
+"Urinary leakage, last month", 
+"Have urinary dysfunction caused\nyou to refrain from activities,\nlast month", 
+"Did you have problems with urinary\nleakage before your surgery for\nperforated diverticulitis", 
+"How often do you change pad,\ndiaper or sanitary aid\nduring a typical day", 
+"How would you feel if urinary dysfunction\nas it were during the last month were to\nremain for the rest of your life?", 
+
+"Is intercourse part of your sex-life", 
+"Has sex been important to you,\nlast 6 months",
+"How often have you had intercourse\nor any other sexual activity, last 6 months",
+"Have you had thoughts or longing\nfor sex, last 6 months", 
+"Have you refrained from sexual activities\nout of fear of failure, last 6 months", 
+"Have your ability to have an orgasm\nchanged after your surgery due to perforated\ndiverticulitis", 
+"Are you satisfied with your current sex-life,\nlast 6 months", 
+"How would you feel if sexual impairments\nwere to remain the same for the rest\nof your life?", 
+
+"Have your ability to get an erection\ndeteriorated or ceased entirely after\nthe surgery for perforated diverticulitis", 
+"If your ability to get an erection has\ndeteriorated or ceased entirely,did\nthis affect your self-esteem", 
+"If your ability to get an erection has\ndeteriorated or ceased entirely, how would\nyou feel if the impairment were to remain the same\nfor the rest of your life?",
+"Have you used technical aids or medication\nto improve or prolong your erection,\nlast 6 months", 
+"If you used technical aids or medication to\nimprove or prolong your erection\nlast 6 months, did it help",
+"Have you had premature ejaculation at\nsexual activity, last 6 months", 
+"Have you been unable to ejaculate at\nsexual activity, last 6 months", 
+"How would you feel if sexual impairments\nwere to remain the same for the\nrest of your life?", 
+
+"Have you reached menopause?", 
+"At sexual arousal, have labia, clitoris\nor the vulva felt swollen and full of blood,\nlast 6 months", 
+"Have your vagina felt lubricated at\nsexual arousal, last 6 months", 
+"Have you had superficial pain around vulva\nduring intercourse or comparable activity,\nlast 6 months",
+"Have you had deep pain in your pelvic\nregion during intercourse or\ncomparable activity,last 6 months", 
+"If you experienced pain during intercourse\nor comparable activity last 6 months, how\nwould you feel if the impairment were to remain the\nsame for the rest of your life?", 
+"How would you feel if sexual impairments were\nto remain the same for the rest of your life?"))) 
 
 
 DESC_ <- HIJK %>% 
@@ -1086,9 +1074,9 @@ FIG_SF <-  ggarrange(SF_1, SF_2, SF_3, SF_4, SF_5, SF_6,
                      SF_7, 
                      ncol=4, nrow=2, common.legend = TRUE, legend="top", heights=c(1, 1))
 #_____________________________________________________________________________________________________________
+#_____________________________________________________________________________________________________________
 
 # Additional analysis 220333: Combine bother question for those with and without stoma 
-
 #----------------------------------------------------------------------------
 # Combine data
 
@@ -1146,8 +1134,6 @@ Adj01 <- paste( signif(exp(M01$beta[[1]]), digits = 3),
                 "(95%CI:",signif(exp(confint(M01)[[1,1]]), digits = 3),
                 ";",signif(exp(confint(M01)[[1,2]]), digits = 3),
                 "),p=", signif(   anova(M01, type="III")[[1,3]] , digits = 2) )
-
-
 #--------------------------------------------------------------------------
 # Plot
 DESC_ <- PS_ %>%
@@ -1161,7 +1147,6 @@ DESC_ <- PS_ %>%
          Up = 100*scimp_wald(inpmat=n, alpha=0.05)[[5]]) %>%
   dplyr::select(Surgery, foutcome, n, Percent, Numbers_perc, Low, Up)  
 
-#___________________________________________________________________________________
 PLOTT_1 <- ggplot(DESC_, aes(x= foutcome, y=Percent, fill=Surgery)) +
   geom_bar(stat="identity", color="black",
            position=position_dodge()) +
