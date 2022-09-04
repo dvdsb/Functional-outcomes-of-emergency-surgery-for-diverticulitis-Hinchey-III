@@ -33,9 +33,9 @@ p. <- c(0.15, 0.2, 0.3, 0.2, 0.15)
 odds.ratio. <- c(0.75, 0.675, 0.5)
 alpha. <- 0.05
 # Lavage
-n1. <- 95   # 11     95
+n1. <- 105   # 11     95
 # Resection
-n2. <- 119   # 80 119
+n2. <- 199   # 80 119
 
 # Proportional odds model
 Sample.size <- popower(p=p., odds.ratio=odds.ratio., n1=n1., n2=n2.) 
@@ -85,7 +85,7 @@ anadata.w <- tibble(read_rds("S://RCVR/kod/LapLavQuestionnaire/LapLav_PS_w_ATE.r
 # Merge the propensity score with the data set
 PC <- full_join(PC, anadata.w) %>% 
   filter(ANA_SET==1)
-#.........................................................................
+#....................................................................................
 desc.0 <- PC %>%
   group_by(Surgery, Q79) %>%
   summarise(median = median(age), 
@@ -480,7 +480,7 @@ EL_CAT2 <- full_join(n, f) %>%
                                   "How often open bowels",                    
                                   "Open bowels again within 1 h",     
                                   "Rush to the toilet", 
-                                  "Distress due to bowel dysfunction",
+                                  "Distress due to bowel dysfunction\n(bowel continuity)",
                                   "Worried after surgery", 
                                   "What worried the most", 
                                   "Satisfied with the treatment", 
@@ -574,7 +574,7 @@ LARS_3 <- MDL(z = "How often open bowels")
 LARS_4 <- MDL(z = "Open bowels again within 1 h")
 LARS_5 <- MDL(z = "Rush to the toilet")  
 LARS_6 <- MDL(z = "LARS categories")  
-LARS_7 <- MDL(z = "Distress due to bowel dysfunction")
+LARS_7 <- MDL(z = "Distress due to bowel dysfunction\n(bowel continuity)")
 
 WOR_1 <- MDL(z = "Worried after surgery")  
 WOR_2 <- MDL(z = "What worried the most")
@@ -618,79 +618,16 @@ QoL_5 <- MDLcont(z = "Worry or anxiety")
 QoL_6 <- MDLcont(z = "Mental well-being")   
 QoL_7 <- MDLcont(z = "Bodily health")  
 
-#-----------------------------------------------------------------------------------------
-# Combine plots
-FIG_EQ5d <-  ggarrange( EQcont_1, EQ_1, EQ_2, EQ_3, EQ_4, EQ_5, EQcont_2 , 
-                        ncol=4, nrow=2, common.legend = TRUE, legend="top", heights=c(1, 1))
 
-FIG_LARS <-  ggarrange( LARS_7, LARScont_1, LARS_6, LARS_1, LARS_2, LARS_3, LARS_4 , LARS_5, 
-                        ncol=4, nrow=2, common.legend = TRUE, legend="top", heights=c(1, 1))  
-
-FIG_WOR <-  ggarrange( WOR_1, WOR_2, WOR_3, 
-                       ncol=3, nrow=1, common.legend = TRUE, legend="top", heights=c(1, 1)) 
-
-FIG_QoL <-  ggarrange( QoL_1, QoL_2, QoL_3, QoL_4, QoL_5, QoL_6, QoL_7, 
-                       ncol=4, nrow=2, common.legend = TRUE, legend="top", heights=c(1, 1)) 
-
-FIG_Phys <-  ggarrange( Phys_1, Phys_2, 
-                        ncol=2, nrow=1, common.legend = TRUE, legend="top", heights=c(1, 1)) 
-
-
-# Primary objective: Comparison between Laparoscopic lavage and Resection with regard to bother due to bowel dysfunction                            
-# PRIMARY ANALYSIS: Statistical analysis of the effect of Lavage vs Resection on distress due to bowel dysfunction                                                       
-# Primary endpoint: Bother/distress due to bowel dysfunction                               
-
-PRIM <- PC %>%
-  filter(Q79 == "Stoma: No") 
-Ppp <- PRO %>% 
-  dplyr::select(studienummer, Q90)
-
-PRIM <- full_join(PRIM, Ppp) %>% 
-  replace_with_na_at( .vars = c("Q90"),
-                      condition = ~.x %in% c(777, 888, 999)) %>%
-  mutate(fQ90=factor(Q90, levels=c(1, 2, 3, 4, 5), 
-                     labels=c( "       N/A" , 
-                               "        No" , 
-                               "  Slightly" , 
-                               "Moderately" , 
-                               " Very much"))) %>%
-  filter(Q79 == "Stoma: No") 
-
-DESC_1 <- PRIM %>%
-  drop_na(fQ90) %>%
-  tabyl(fQ90, Surgery) %>% 
-  adorn_percentages("col") %>%
-  adorn_pct_formatting(digits = 2) %>%
-  adorn_ns() %>%
-  kbl() %>%
-  kable_classic(full_width = F, html_font = "Cambria", position = "left")
-
-
-#The odds ratio for a tendency of responding with higher 
-# categories(much distress) rather than lower categories (none or low distress)               
-
-M0 <- clm(factor(Q90) ~  Surgery , data = PRIM  )
-Unadj1 <- paste( signif(exp(M0$beta[[1]]), digits = 3),
-                 "(95%CI:",signif(exp(confint(M0)[[1,1]]), digits = 3),
-                 ";",signif(exp(confint(M0)[[1,2]]), digits = 3),
-                 "),p=", signif(   anova(M0, type="III")[[1,3]] , digits = 2) )
-
-M1 <- clm(factor(Q90) ~  Surgery + rcs(age_cent ,5)  +
-            kol +
-            CVD +
-            immunosuppr +
-            sepsis_op, data = PRIM , weights = w )
-Adj1 <- paste( signif(exp(M1$beta[[1]]), digits = 3),
-               "(95%CI:",signif(exp(confint(M1)[[1,1]]), digits = 3),
-               ";",signif(exp(confint(M1)[[1,2]]), digits = 3),
-               "),p=", signif(   anova(M1, type="III")[[1,3]] , digits = 2) )
-
-# The tendency for bother due to bowel dysfunction is higher among patients 
-# operated by Laparoscopic lavage compared with resection.
+#######################################################################################################################
 
 # Stoma function                    
+#   S://RCVR/kod/LapLavQuestionnaire/new/
+#ST <- read_delim("S://RCVR/kod/LapLavQuestionnaire/new/LpLvQ211012.txt",  "\t", escape_double = FALSE, trim_ws = TRUE)
+#ST <- read_delim("LpLvQ211012.txt",  "\t", escape_double = FALSE, trim_ws = TRUE)
+#ST <- read_delim("LpLvQ211012.txt", delim = "\t", escape_double = FALSE, trim_ws = TRUE)
+ST <- read.delim("S:/RCVR/kod/LapLavQuestionnaire/new3/LpLvQ211012.txt")
 
-ST <- read_delim("LpLvQ211012.txt",  "\t", escape_double = FALSE, trim_ws = TRUE)
 ST2 <- full_join(PC, ST) %>%
   full_join(P) %>%
   filter(Q79=="Stoma: Yes" & ANA_SET==1)
@@ -938,53 +875,53 @@ HIJK <- H %>%
                values_to = "Response.f") %>% 
   drop_na(Response.f) %>% 
   mutate(variable=factor(Var.f,  
-levels = c( "Q46", "Q47", "Q48", 
-"Q49", "Q50", "Q51" ,
-"Q52", "Q53", "Q54" ,
-"Q55", "Q56", "Q57" ,
-"Q58", "Q59", "Q60",
-"Q61", "Q62", 
-"Q64" ,"Q65", "Q66", 
-"Q67" , "Q68", "Q69", 
-"Q70" , "Q71", 
-"Q72", "Q73" , "Q74", 
-"Q75", "Q76","Q77", 
-"Q78"), 
-labels=c("Feeling that the bladder has\nnot been emptied, last month", 
-"Need to hurry to the toilet to\nurinate, last month", 
-"Urinary leakage due to not\nreaching a toilet in time", 
-"Urinary leakage due to physical\nstress, last month",
-"Urinary leakage, last month", 
-"Have urinary dysfunction caused\nyou to refrain from activities,\nlast month", 
-"Did you have problems with urinary\nleakage before your surgery for\nperforated diverticulitis", 
-"How often do you change pad,\ndiaper or sanitary aid\nduring a typical day", 
-"How would you feel if urinary dysfunction\nas it were during the last month were to\nremain for the rest of your life?", 
-
-"Is intercourse part of your sex-life", 
-"Has sex been important to you,\nlast 6 months",
-"How often have you had intercourse\nor any other sexual activity, last 6 months",
-"Have you had thoughts or longing\nfor sex, last 6 months", 
-"Have you refrained from sexual activities\nout of fear of failure, last 6 months", 
-"Have your ability to have an orgasm\nchanged after your surgery due to perforated\ndiverticulitis", 
-"Are you satisfied with your current sex-life,\nlast 6 months", 
-"How would you feel if sexual impairments\nwere to remain the same for the rest\nof your life?", 
-
-"Have your ability to get an erection\ndeteriorated or ceased entirely after\nthe surgery for perforated diverticulitis", 
-"If your ability to get an erection has\ndeteriorated or ceased entirely,did\nthis affect your self-esteem", 
-"If your ability to get an erection has\ndeteriorated or ceased entirely, how would\nyou feel if the impairment were to remain the same\nfor the rest of your life?",
-"Have you used technical aids or medication\nto improve or prolong your erection,\nlast 6 months", 
-"If you used technical aids or medication to\nimprove or prolong your erection\nlast 6 months, did it help",
-"Have you had premature ejaculation at\nsexual activity, last 6 months", 
-"Have you been unable to ejaculate at\nsexual activity, last 6 months", 
-"How would you feel if sexual impairments\nwere to remain the same for the\nrest of your life?", 
-
-"Have you reached menopause?", 
-"At sexual arousal, have labia, clitoris\nor the vulva felt swollen and full of blood,\nlast 6 months", 
-"Have your vagina felt lubricated at\nsexual arousal, last 6 months", 
-"Have you had superficial pain around vulva\nduring intercourse or comparable activity,\nlast 6 months",
-"Have you had deep pain in your pelvic\nregion during intercourse or\ncomparable activity,last 6 months", 
-"If you experienced pain during intercourse\nor comparable activity last 6 months, how\nwould you feel if the impairment were to remain the\nsame for the rest of your life?", 
-"How would you feel if sexual impairments were\nto remain the same for the rest of your life?"))) 
+                         levels = c( "Q46", "Q47", "Q48", 
+                                     "Q49", "Q50", "Q51" ,
+                                     "Q52", "Q53", "Q54" ,
+                                     "Q55", "Q56", "Q57" ,
+                                     "Q58", "Q59", "Q60",
+                                     "Q61", "Q62", 
+                                     "Q64" ,"Q65", "Q66", 
+                                     "Q67" , "Q68", "Q69", 
+                                     "Q70" , "Q71", 
+                                     "Q72", "Q73" , "Q74", 
+                                     "Q75", "Q76","Q77", 
+                                     "Q78"), 
+                         labels=c("Feeling that the bladder has\nnot been emptied, last month", 
+                                  "Need to hurry to the toilet to\nurinate, last month", 
+                                  "Urinary leakage due to not\nreaching a toilet in time", 
+                                  "Urinary leakage due to physical\nstress, last month",
+                                  "Urinary leakage, last month", 
+                                  "Have urinary dysfunction caused\nyou to refrain from activities,\nlast month", 
+                                  "Did you have problems with urinary\nleakage before your surgery for\nperforated diverticulitis", 
+                                  "How often do you change pad,\ndiaper or sanitary aid\nduring a typical day", 
+                                  "How would you feel if urinary dysfunction\nas it were during the last month were to\nremain for the rest of your life?", 
+                                  
+                                  "Is intercourse part of your sex-life", 
+                                  "Has sex been important to you,\nlast 6 months",
+                                  "How often have you had intercourse\nor any other sexual activity, last 6 months",
+                                  "Have you had thoughts or longing\nfor sex, last 6 months", 
+                                  "Have you refrained from sexual activities\nout of fear of failure, last 6 months", 
+                                  "Have your ability to have an orgasm\nchanged after your surgery due to perforated\ndiverticulitis", 
+                                  "Are you satisfied with your current sex-life,\nlast 6 months", 
+                                  "How would you feel if sexual impairments\nwere to remain the same for the rest\nof your life?", 
+                                  
+                                  "Have your ability to get an erection\ndeteriorated or ceased entirely after\nthe surgery for perforated diverticulitis", 
+                                  "If your ability to get an erection has\ndeteriorated or ceased entirely,did\nthis affect your self-esteem", 
+                                  "If your ability to get an erection has\ndeteriorated or ceased entirely, how would\nyou feel if the impairment were to remain the same\nfor the rest of your life?",
+                                  "Have you used technical aids or medication\nto improve or prolong your erection,\nlast 6 months", 
+                                  "If you used technical aids or medication to\nimprove or prolong your erection\nlast 6 months, did it help",
+                                  "Have you had premature ejaculation at\nsexual activity, last 6 months", 
+                                  "Have you been unable to ejaculate at\nsexual activity, last 6 months", 
+                                  "How would you feel if sexual impairments\nwere to remain the same for the\nrest of your life?", 
+                                  
+                                  "Have you reached menopause?", 
+                                  "At sexual arousal, have labia, clitoris\nor the vulva felt swollen and full of blood,\nlast 6 months", 
+                                  "Have your vagina felt lubricated at\nsexual arousal, last 6 months", 
+                                  "Have you had superficial pain around vulva\nduring intercourse or comparable activity,\nlast 6 months",
+                                  "Have you had deep pain in your pelvic\nregion during intercourse or\ncomparable activity,last 6 months", 
+                                  "If you experienced pain during intercourse\nor comparable activity last 6 months, how\nwould you feel if the impairment were to remain the\nsame for the rest of your life?", 
+                                  "How would you feel if sexual impairments were\nto remain the same for the rest of your life?"))) 
 
 
 DESC_ <- HIJK %>% 
@@ -1074,30 +1011,40 @@ FIG_SF <-  ggarrange(SF_1, SF_2, SF_3, SF_4, SF_5, SF_6,
                      SF_7, 
                      ncol=4, nrow=2, common.legend = TRUE, legend="top", heights=c(1, 1))
 #_____________________________________________________________________________________________________________
-#_____________________________________________________________________________________________________________
 
-# Additional analysis 220333: Combine bother question for those with and without stoma 
-#----------------------------------------------------------------------------
-# Combine data
 
-# Swedish version of the question:
-#90. Om du resten av ditt liv skulle leva med dina sammantagna mag- och tarmbesvär, 
-#som det varit den senaste månaden, hur skulle du uppleva det?
-#0.		Inte aktuellt, jag har inte haft några tarmbesvär den senaste månaden
-#1.		Det skulle inte beröra mig alls
-#2.		Det skulle beröra mig lite
-#3.		Det skulle beröra mig måttligt
-#4.		Det skulle beröra mig mycket
+# Primary objective: Comparison between Laparoscopic lavage and Resection with regard to bother due to bowel dysfunction                            
+# PRIMARY ANALYSIS: Statistical analysis of the effect of Lavage vs Resection on distress due to bowel dysfunction                                                       
+# Primary endpoint: Bother/distress due to bowel dysfunction  
+
 lab <-c( "Not applicable" , "No" , "A little" , "Moderately" , "Very much")
+#-------------------------------------------------------------------------------
+PRIM <- PC %>%
+  filter(Q79 == "Stoma: No") 
+Ppp <- PRO %>% 
+  dplyr::select(studienummer, Q90)
+
+PRIM <- full_join(PRIM, Ppp) %>% 
+  replace_with_na_at( .vars = c("Q90"),
+                      condition = ~.x %in% c(777, 888, 999)) %>%
+  mutate(fQ90=factor(Q90, levels=c(1, 2, 3, 4, 5), 
+                     labels=c( "       N/A" , 
+                               "        No" , 
+                               "  Slightly" , 
+                               "Moderately" , 
+                               " Very much"))) %>%
+  filter(Q79 == "Stoma: No") 
+#-------------------------------------------------------------------------------
 PRIM2 <- PRIM %>% 
   mutate(foutcome=factor(Q90, levels=c(0, 1, 2, 3, 4), labels=lab ), 
          outcome=Q90, STOMA="N") %>% 
   dplyr::select(studienummer, outcome,  foutcome, STOMA, Surgery, 
                 age_cent, kol, CVD, immunosuppr, sepsis_op,  w)    # Q90, fQ90
-#------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 ST2 <- full_join(PC, ST) %>%
   full_join(P) %>%
   filter(Q79=="Stoma: Yes" & ANA_SET==1)
+glimpse(ST2); dim(ST2)            
 ST2 <- ST2 %>%
   mutate(foutcome=factor(Q107, levels=c(0, 1, 2, 3, 4), labels=lab ), 
          outcome=Q107, STOMA="Y") %>% 
@@ -1118,22 +1065,37 @@ DESC_1 <- PS_ %>%
   kbl() %>%
   kable_classic(full_width = F, html_font = "Cambria", position = "left")
 #---------------------------------------------------------------------------
-PS_sub <- PS_ # %>%
-#  filter(outcome != 0)
+
 # Estimation
 # Odds ratio: Lavage vs Resection
-M0 <- clm(factor(outcome) ~  Surgery , data = PS_sub   )
+M0 <- clm(factor(outcome) ~  Surgery , data = PS_   )
 Unadj1 <- paste( signif(exp(M0$beta[[1]]), digits = 3),
                  "(95%CI:",signif(exp(confint(M0)[[1,1]]), digits = 3),
                  ";",signif(exp(confint(M0)[[1,2]]), digits = 3),
                  "),p=", signif(   anova(M0, type="III")[[1,3]] , digits = 2) )
 
 
-M01 <- clm(factor(outcome)  ~  Surgery , data = PS_sub , weights = w )
+M01 <- clm(factor(outcome)  ~  Surgery , data = PS_ , weights = w )
 Adj01 <- paste( signif(exp(M01$beta[[1]]), digits = 3),
                 "(95%CI:",signif(exp(confint(M01)[[1,1]]), digits = 3),
                 ";",signif(exp(confint(M01)[[1,2]]), digits = 3),
                 "),p=", signif(   anova(M01, type="III")[[1,3]] , digits = 2) )
+
+#--------------------------------------------------------------------------------
+M011 <- clm(factor(outcome)  ~  Surgery + rcs(age_cent ,5)  +
+              kol +
+              CVD +
+              immunosuppr +
+              sepsis_op, data = PS_ , weights = w )
+Adj011 <- paste( signif(exp(M011$beta[[1]]), digits = 3),
+                 "(95%CI:",signif(exp(confint(M011)[[1,1]]), digits = 3),
+                 ";",signif(exp(confint(M011)[[1,2]]), digits = 3),
+                 "),p=", signif(   anova(M011, type="III")[[1,3]] , digits = 2) )
+
+#The odds ratio for a tendency of responding with higher 
+# categories(much distress) rather than lower categories (none or low distress)      
+# Primary estimand:
+Adj011
 #--------------------------------------------------------------------------
 # Plot
 DESC_ <- PS_ %>%
@@ -1154,17 +1116,69 @@ PLOTT_1 <- ggplot(DESC_, aes(x= foutcome, y=Percent, fill=Surgery)) +
                 position=position_dodge(.9)) + 
   scale_y_continuous(limits = c(0, 100), breaks = c(0, 25, 50, 75, 100)) 
 PLOTT_1 <- PLOTT_1+labs(title="", x="", y = " ", 
-                        subtitle = paste0("Distress due to bowel or stoma dysfunction","\n" , Adj01 )) +
+                        subtitle = paste0("Primary endpoint:\nDistress due to bowel or stoma dysfunction","\n" , Adj01 )) +
   theme_classic() +
   scale_fill_manual(values=c('#999999','#E69F00')) +
   theme(legend.position="none") + 
-  theme(plot.subtitle = element_text(size = 12),
+  theme(plot.subtitle = element_text(size = 8, face = "bold"),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size = 7.0, face="bold"),
         axis.title.x = element_text(color = "white", size = 1),
         axis.text.y = element_text(color = "black", size = 5), 
         axis.title.y = element_text(color = "white", size = 1)) 
 PLOTT_1
 
-FIG_ <-  ggarrange( PLOTT_1,  ncol=1, nrow=1, common.legend = TRUE, legend="top", heights=c(1, 1))
+FIG_ <-  ggarrange( PLOTT_1,  ncol=1, nrow=1, common.legend = TRUE, legend="top", heights=c(1, 1))  # c(1, 1)
+
+#######################################################################################################################
+setwd("S://Divertikulit/LapLav PRO/Review220902")
+#-----------------------------------------------------------------------------------------
+# Combine plots
+FIG_EQ5d <-  ggarrange( EQcont_1, EQ_1, EQ_2, EQ_3, EQ_4, EQ_5, EQcont_2 , 
+                        ncol=4, nrow=2, common.legend = TRUE, legend="top", heights=c(1, 1))
+
+FIG_LARS <-  ggarrange( PLOTT_1, LARS_7, LARScont_1, LARS_6, LARS_1, LARS_2, LARS_3, LARS_4 , LARS_5, 
+                        ncol=3, nrow=3, common.legend = TRUE, legend="top", heights=c(1, 1))   
+
+FIG_WOR <-  ggarrange( WOR_1, WOR_2, WOR_3, 
+                       ncol=3, nrow=1, common.legend = TRUE, legend="top", heights=c(1, 1)) 
+
+FIG_QoL <-  ggarrange( QoL_1, QoL_2, QoL_3, QoL_4, QoL_5, QoL_6, QoL_7, 
+                       ncol=4, nrow=2, common.legend = TRUE, legend="top", heights=c(1, 1)) 
+
+FIG_Phys <-  ggarrange( Phys_1, Phys_2, 
+                        ncol=2, nrow=1, common.legend = TRUE, legend="top", heights=c(1, 1)) 
+
+#######################################################################################################################
+tiff("FIG_BOWEL.tiff", width = 20, height = 20, units = "cm", res = 600)
+FIG_LARS
+dev.off()
+
+# Comparison between Laparoscopic lavage and Resection with regard to bother due to 
+# bowel dysfunction among patients with bowel continuity                            
 
 
+DESC_1 <- PRIM %>%
+  drop_na(fQ90) %>%
+  tabyl(fQ90, Surgery) %>% 
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 2) %>%
+  adorn_ns() %>%
+  kbl() %>%
+  kable_classic(full_width = F, html_font = "Cambria", position = "left")
+
+M0 <- clm(factor(Q90) ~  Surgery , data = PRIM  )
+Unadj1 <- paste( signif(exp(M0$beta[[1]]), digits = 3),
+                 "(95%CI:",signif(exp(confint(M0)[[1,1]]), digits = 3),
+                 ";",signif(exp(confint(M0)[[1,2]]), digits = 3),
+                 "),p=", signif(   anova(M0, type="III")[[1,3]] , digits = 2) )
+
+M1 <- clm(factor(Q90) ~  Surgery + rcs(age_cent ,5)  +
+            kol +
+            CVD +
+            immunosuppr +
+            sepsis_op, data = PRIM , weights = w )
+Adj1 <- paste( signif(exp(M1$beta[[1]]), digits = 3),
+               "(95%CI:",signif(exp(confint(M1)[[1,1]]), digits = 3),
+               ";",signif(exp(confint(M1)[[1,2]]), digits = 3),
+               "),p=", signif(   anova(M1, type="III")[[1,3]] , digits = 2) )
+####################################################################################
